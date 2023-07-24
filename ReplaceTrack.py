@@ -52,13 +52,48 @@ print('gScriptDir: "{}"'.format(gScriptDir))
 
 # TODO: Replace with full file paths obtained from command line
 gOrgFile = gScriptDir + "/alex-productions-promotional-video_8bit,32kHz,0.ogg_48kbps.mp3_-12dB,40kbps.wma_+12dB,SnakeEQ,0.ogg_44.1KHz,0.998108143x.wav"
-gReplFile = gScriptDir + "/alex-productions-promotional-video.wav"
-
 print('gOrgFile: "{}"'.format(gOrgFile))
+
+gReplFile = gScriptDir + "/alex-productions-promotional-video.wav"
 print('gReplFile: "{}"'.format(gReplFile))
 
-print('Loading gOrgFile')
-gOrgData, gOrgSR = librosa.load(gOrgFile)
-print('gOrgFile loaded')
+print('vvvvv Loading gOrgFile vvvvv')
 
-sounddevice.play(gOrgData, gOrgSR, blocking=True)
+gOrgInfo = soundfile.info(gOrgFile)
+print('gOrgInfo: {}'.format(gOrgInfo))
+# print('type of gOrgInfo.channels: {}'.format(type(gOrgInfo.channels)))
+# print('type of gOrgInfo.samplerate: {}'.format(type(gOrgInfo.samplerate)))
+
+# gOrgData, gOrgSR = librosa.load(gOrgFile)
+# gOrgData, gOrgSR = librosa.load(gOrgFile, sr=gOrgInfo.samplerate)
+# gOrgData, gOrgSR = librosa.load(gOrgFile, sr=gOrgInfo.samplerate, mono=(gOrgInfo.channels == 1))
+gTmpOrgData, gOrgSR = librosa.load(gOrgFile, sr=gOrgInfo.samplerate, mono=(gOrgInfo.channels == 1))
+print('gOrgSR: {}'.format(gOrgSR))
+print('type of gTmpOrgData: {}'.format(type(gTmpOrgData)))
+if isinstance(gTmpOrgData, numpy.ndarray):
+    print('gTmpOrdData.ndim: {}'.format(gTmpOrgData.ndim))
+    print('gTmpOrgData.shape: {}'.format(gTmpOrgData.shape))
+
+# Rotate array, because it seems to be incompatible as-is with sounddevice
+gOrgData = numpy.swapaxes(gTmpOrgData, 0, 1)
+if isinstance(gOrgData, numpy.ndarray):
+    print('gOrdData.ndim: {}'.format(gOrgData.ndim))
+    print('gOrgData.shape: {}'.format(gOrgData.shape))
+
+print('^^^^^ gOrgFile loaded ^^^^^')
+
+# If librosa.load() resamples, g*SR != g*Info.samplerate
+sounddevice.play(gOrgData, samplerate=gOrgSR, blocking=True)
+
+print('vvvvv Loading gReplFile vvvvv')
+
+gReplInfo = soundfile.info(gReplFile)
+print('gReplInfo: {}'.format(gReplInfo))
+
+gReplData, gReplSR = librosa.load(gReplFile, sr=gReplInfo.samplerate, mono=(gReplInfo.channels == 1))
+print('gReplSR: {}'.format(gReplSR))
+
+print('^^^^^ gReplFile loaded ^^^^^')
+
+# If librosa.load() resamples, g*SR != g*Info.samplerate
+# sounddevice.play(gReplData, samplerate=gReplSR, blocking=True)
