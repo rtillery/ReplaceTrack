@@ -41,15 +41,24 @@
 #
 
 import os
+import numpy
+import soundfile
 import librosa
+import sounddevice
 
 gScriptDir = os.path.abspath(os.path.dirname(__file__))
 
 print('gScriptDir: "{}"'.format(gScriptDir))
 
 # TODO: Replace with full file paths obtained from command line
-gOrgFile = gScriptDir + "alex-productions-promotional-video_8bit,32kHz,0.ogg_48kbps.mp3_-12dB,40kbps.wma_+12dB,SnakeEQ,0.ogg_44.1KHz,0.998108143x.wav"
-gReplFile = gScriptDir + "alex-productions-promotional-video.wav"
+gOrgFile = gScriptDir + "/alex-productions-promotional-video_8bit,32kHz,0.ogg_48kbps.mp3_-12dB,40kbps.wma_+12dB,SnakeEQ,0.ogg_44.1KHz,0.998108143x.wav"
+gReplFile = gScriptDir + "/alex-productions-promotional-video.wav"
 
 print('gOrgFile: "{}"'.format(gOrgFile))
 print('gReplFile: "{}"'.format(gReplFile))
+
+print('Loading gOrgFile')
+gOrgData, gOrgSR = librosa.load(gOrgFile)
+print('gOrgFile loaded')
+
+sounddevice.play(gOrgData, gOrgSR, blocking=True)
