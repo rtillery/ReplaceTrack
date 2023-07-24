@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 
+# Copyright (c) 2023, Rick Tillery. All rights reserved.
+# Licensed under the Open Software License version 3.0.
+
 #
 # ReplaceTrack.py
 #
-# Tool to replace a music track with another, matching the replacement to the
-# timing of the first.
+# Tool to replace audio track with another, matching the original timing,
+# duration, and level.
 #
 # This tool was created to replace tracks in rhythm games, like Clone Hero,
-# that are corrupted in some way, with a higher quality version. However,
-# to maintain compatibility with the timing of the game portion, in a .mid
-# (.midi) or .chart file, the replacement track needs to be aligned with the
-# timing of the original one.
+# that are corrupted in some way, with a higher quality version. However, to
+# maintain compatibility with the timing of the game portion, in a .mid
+# (.midi) or .chart file, the replacement track needs to match the timing of
+# the original one.
 #
-
 #
-# The steps that are intended to follow to accomplish this are:
+# WIP
+#
+# This tool is a work in progress. At present, the intended approach is:
 #
 #  1. Detect the start of each track using a silence threshold.
 #  2. Use the starts to do a coarse alighment of the tracks by adjusting the
