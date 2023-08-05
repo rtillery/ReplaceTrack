@@ -45,28 +45,100 @@
 #
 
 import os
+import argparse
+from pathlib import Path
+from pathlib import PurePath
+
 import numpy
 import soundfile
 import librosa
 import sounddevice
 
-gScriptDir = os.path.abspath(os.path.dirname(__file__))
+import cProfile
 
-print('gScriptDir: "{}"'.format(gScriptDir))
+# File and directory naming conventions:
+#
+# path: (directory containing file or directory itself) /foo/bar, ./, ../bar
+#
+# file: file (or dir) handle
+# dir: dir handle
+#
+# filename: myfile.ext
+# filepath: /foo/bar/myfile.ext, myfile.ext (./myfile.ext), ../bar/myfile.ext
+# filedir: /foo/bar, ./, ../bar
 
-# TODO: Replace with full file paths obtained from command line
-gOrgFile = gScriptDir + "/alex-productions-promotional-video_8bit,32kHz,0.ogg_48kbps.mp3_-12dB,40kbps.wma_+12dB,SnakeEQ,0.ogg_44.1KHz,0.998108143x.wav"
-print('gOrgFile: "{}"'.format(gOrgFile))
+class CmdLineParser(argparse.ArgumentParser):
+    def __init__(self, **kwargs):
+            super().__init__(
+                **kwargs,
+                description=(
+                    'Replace a distorted audio track with another '
+                    '(presumbably higher quality version), modifying the '
+                    'replacement to match the sample rate, timing, duration, '
+                    'level and file format of the orginal.'
+                )
+            )
+            self.add_argument(
+                'originalFilepath',
+                type=self.AbsPath,
+                help='original audio file to be replaced'
+            )
+            self.add_argument(
+                'referenceFilepath',
+                type=self.AbsPath,
+                help='audio file used to create replacement file'
+            )
+            self.add_argument(
+                'replacementFilepath',
+                type=self.AbsPath,
+                help='resulting replacement file'
+            )
 
-gReplFile = gScriptDir + "/alex-productions-promotional-video.wav"
-print('gReplFile: "{}"'.format(gReplFile))
+    def AbsPath(self, path):
+        return Path(path).resolve()
+
+    def GetArgs(self):
+        return self.parse_args()
+
+
+class SoundFile:
+    def __init__(self, filename):
+        self.filename = filename
+        self.info = soundfile.info(self.filename)
+        # TODO: Can tmpData be removed in favor of replacing the data when rotating?
+        self.tmpData, self.sampleRate = librosa.load(self.filename,
+                                                     sr=self.info.samplerate,
+                                                     mono=(self.info.channels == 1))
+        # Rotate the data array, because it isn't compatible with sounddevice
+        self.data = numpy.swapaxes(self.tmpData, 0, 1)
+
+
+gArgs = CmdLineParser().GetArgs()
+
+print(gArgs)
 
 print('vvvvv Loading gOrgFile vvvvv')
+gOrgFile = SoundFile(gArgs.originalFilepath)
+print('gOrgFile: {}'.format(gOrgFile))
+print('gOrgFile.info: {}'.format(gOrgFile.info))
+print('gOrgFile.sampleRate: {}'.format(gOrgFile.sampleRate))
 
-gOrgInfo = soundfile.info(gOrgFile)
-print('gOrgInfo: {}'.format(gOrgInfo))
-# print('type of gOrgInfo.channels: {}'.format(type(gOrgInfo.channels)))
-# print('type of gOrgInfo.samplerate: {}'.format(type(gOrgInfo.samplerate)))
+if isinstance(gOrgFile.data, numpy.ndarray):
+    print('gOrdFile.data.ndim: {}'.format(gOrgFile.data.ndim))
+    print('gOrgFile.data.shape: {}'.format(gOrgFile.data.shape))
+
+print('^^^^^ gOrgFile loaded ^^^^^')
+
+# If librosa.load() resamples, g*SR != g*Info.samplerate
+sounddevice.play(gOrgFile.data, samplerate=gOrgFile.sampleRate, blocking=True)
+
+exit()
+
+
+
+
+
+
 
 # gOrgData, gOrgSR = librosa.load(gOrgFile)
 # gOrgData, gOrgSR = librosa.load(gOrgFile, sr=gOrgInfo.samplerate)
